@@ -12,10 +12,11 @@ import { useEffect, useState } from 'react';
 import { User } from './types/User';
 import { getUsers } from './api/users';
 import { Post } from './types/Post';
-import { getUsersPosts } from './api/posts';
+import { getUsersPosts } from './api/userPosts';
 
 export const App = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
+  const [isPostsLoading, setIsPostsLoading] = useState(false);
   const [error, setError] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -23,22 +24,22 @@ export const App = () => {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   const loadUserPosts = (userId: number) => {
-    setIsLoading(true);
+    setIsPostsLoading(true);
     setError(false);
 
     getUsersPosts(userId)
       .then(setPosts)
       .catch(() => setError(true))
-      .finally(() => setIsLoading(false));
+      .finally(() => setIsPostsLoading(false));
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    setIsUsersLoading(true);
 
     getUsers()
       .then(setUsers)
       .finally(() => {
-        setIsLoading(false);
+        setIsUsersLoading(false);
       });
   }, []);
 
@@ -67,11 +68,11 @@ export const App = () => {
               </div>
 
               <div className="block" data-cy="MainContent">
-                {!selectedUser && !isLoading && (
+                {!selectedUser && !isPostsLoading && (
                   <p data-cy="NoSelectedUser">No user selected</p>
                 )}
 
-                {selectedUser && isLoading && <Loader />}
+                {selectedUser && isPostsLoading && isUsersLoading && <Loader />}
 
                 {error && (
                   <div
@@ -82,18 +83,22 @@ export const App = () => {
                   </div>
                 )}
 
-                {posts.length === 0 && selectedUser && (
-                  <div className="notification is-warning" data-cy="NoPostsYet">
-                    No posts yet
+                {posts.length === 0 &&
+                  selectedUser &&
+                  !isPostsLoading &&
+                  !error && (
+                  <div
+                    className="notification is-warning"
+                    data-cy="NoPostsYet"
+                  >
+                      No posts yet{' '}
                   </div>
                 )}
 
-                {posts.length > 0 && selectedUser && !isLoading && (
-                  <PostsList
-                    posts={posts}
-                    selectedPostId={selectedPost?.id}
-                    onPostSelected={setSelectedPost}
-                  />
+                {posts.length === 0 && selectedUser && !isPostsLoading && !error && (
+                  <div className="notification is-warning" data-cy="NoPostsYet">
+                    No posts yet
+                  </div>
                 )}
               </div>
             </div>

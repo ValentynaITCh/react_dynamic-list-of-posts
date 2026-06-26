@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Loader } from './Loader';
 import { NewCommentForm } from './NewCommentForm';
 import { Post } from '../types/Post';
-import { createComment, deleteComment, getPostComments } from '../api/comments';
+import {
+  createComment,
+  deleteComment,
+  getPostComments,
+} from '../api/postComments';
 import { CommentData, Comment } from '../types/Comment';
 
 type Props = {
@@ -13,6 +17,8 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [visible, setVisible] = useState(false);
+
+  const [addError, setAddError] = useState(false);
 
   const loadComments = () => {
     setIsLoading(true);
@@ -28,6 +34,7 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
   useEffect(loadComments, [post.id]);
 
   const addComment = async ({ name, email, body }: CommentData) => {
+    setAddError(false);
     try {
       const newComment = await createComment({
         name,
@@ -37,14 +44,20 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
       });
 
       setComments(prev => [...prev, newComment]);
-    } catch (e) {
-      setError(true);
+    } catch {
+      setAddError(true);
     }
   };
 
   const deleteTheComment = async (commentId: number) => {
-    setComments(prev => prev.filter(comment => comment.id !== commentId));
-    await deleteComment(commentId);
+    const backup = comments;
+
+    setComments(current => current.filter(c => c.id !== commentId));
+    try {
+      await deleteComment(commentId);
+    } catch {
+      setComments(backup);
+    }
   };
 
   return (
@@ -59,13 +72,12 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
         <div className="block">
           {isLoading && <Loader />}
 
-          {!isLoading && error && (
+          {!isLoading && (error || addError) && (
             <div className="notification is-danger" data-cy="CommentsError">
               Something went wrong
             </div>
           )}
-
-          {comments.length === 0 && (
+          {comments.length === 0 && !isLoading && !error && (
             <p className="title is-4" data-cy="NoCommentsMessage">
               No comments yet
             </p>
