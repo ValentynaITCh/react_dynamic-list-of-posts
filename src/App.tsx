@@ -15,7 +15,6 @@ import { getUsersPosts } from './api/userPosts';
 import { PostsList } from './components/PostsList';
 
 export const App = () => {
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -69,7 +68,7 @@ export const App = () => {
               </div>
 
               <div className="block" data-cy="MainContent">
-                {!selectedUser && !isLoading && (
+                {!selectedUser && (
                   <p data-cy="NoSelectedUser">No user selected</p>
                 )}
 
@@ -84,23 +83,19 @@ export const App = () => {
                   </div>
                 )}
 
+                {posts.length === 0 && selectedUser && !isLoading && !error && (
+                  <div className="notification is-warning" data-cy="NoPostsYet">
+                    No posts yet
+                  </div>
+                )}
 
-
-                {posts.length === 0 &&
-                  selectedUser &&
-                  !isLoading &&
-                  !error && (
-                    <div
-                      className="notification is-warning"
-                      data-cy="NoPostsYet"
-                    >
-                      No posts yet
-                    </div>
-                  )}
-
-                  {posts.length > 0 && !isLoading && !error && (
-                    <PostsList posts={posts}   selectedPostId={selectedPost?.id}
-  onPostSelected={setSelectedPost}/>)}
+                {posts.length > 0 && !isLoading && !error && (
+                  <PostsList
+                    posts={posts}
+                    selectedPostId={selectedPost?.id}
+                    onPostSelected={setSelectedPost}
+                  />
+                )}
               </div>
             </div>
           </div>
