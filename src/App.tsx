@@ -4,7 +4,6 @@ import 'bulma/css/bulma.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 import './App.scss';
 
-import { PostsList } from './components/PostsList';
 import { PostDetails } from './components/PostDetails';
 import { UserSelector } from './components/UserSelector';
 import { Loader } from './components/Loader';
@@ -13,10 +12,11 @@ import { User } from './types/User';
 import { getUsers } from './api/users';
 import { Post } from './types/Post';
 import { getUsersPosts } from './api/userPosts';
+import { PostsList } from './components/PostsList';
 
 export const App = () => {
-  const [isUsersLoading, setIsUsersLoading] = useState(false);
-  const [isPostsLoading, setIsPostsLoading] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -24,27 +24,28 @@ export const App = () => {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   const loadUserPosts = (userId: number) => {
-    setIsPostsLoading(true);
+    setIsLoading(true);
     setError(false);
 
     getUsersPosts(userId)
       .then(setPosts)
       .catch(() => setError(true))
-      .finally(() => setIsPostsLoading(false));
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
-    setIsUsersLoading(true);
+    setIsLoading(true);
 
     getUsers()
       .then(setUsers)
       .finally(() => {
-        setIsUsersLoading(false);
+        setIsLoading(false);
       });
   }, []);
 
   useEffect(() => {
     setSelectedPost(null);
+    setPosts([]);
 
     if (selectedUser) {
       loadUserPosts(selectedUser.id);
@@ -68,11 +69,11 @@ export const App = () => {
               </div>
 
               <div className="block" data-cy="MainContent">
-                {!selectedUser && !isPostsLoading && (
+                {!selectedUser && !isLoading && (
                   <p data-cy="NoSelectedUser">No user selected</p>
                 )}
 
-                {selectedUser && isPostsLoading && isUsersLoading && <Loader />}
+                {selectedUser && isLoading && <Loader />}
 
                 {error && (
                   <div
@@ -83,23 +84,23 @@ export const App = () => {
                   </div>
                 )}
 
+
+
                 {posts.length === 0 &&
                   selectedUser &&
-                  !isPostsLoading &&
+                  !isLoading &&
                   !error && (
-                  <div
-                    className="notification is-warning"
-                    data-cy="NoPostsYet"
-                  >
-                      No posts yet{' '}
-                  </div>
-                )}
+                    <div
+                      className="notification is-warning"
+                      data-cy="NoPostsYet"
+                    >
+                      No posts yet
+                    </div>
+                  )}
 
-                {posts.length === 0 && selectedUser && !isPostsLoading && !error && (
-                  <div className="notification is-warning" data-cy="NoPostsYet">
-                    No posts yet
-                  </div>
-                )}
+                  {posts.length > 0 && !isLoading && !error && (
+                    <PostsList posts={posts}   selectedPostId={selectedPost?.id}
+  onPostSelected={setSelectedPost}/>)}
               </div>
             </div>
           </div>
